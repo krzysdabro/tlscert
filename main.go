@@ -75,7 +75,11 @@ func getCerts(u *url.URL) ([]*x509.Certificate, error) {
 	}
 	defer netConn.Close()
 
-	tlsConn := tls.Client(netConn, &tls.Config{InsecureSkipVerify: true})
+	cfg := &tls.Config{
+		ServerName:         u.Hostname(),
+		InsecureSkipVerify: true,
+	}
+	tlsConn := tls.Client(netConn, cfg)
 	defer tlsConn.Close()
 
 	err = tlsConn.Handshake()

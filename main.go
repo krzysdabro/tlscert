@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var separator = strings.Repeat("-", 30)
+
 func main() {
 	flag.Parse()
 	if flag.NArg() == 0 {
@@ -33,7 +35,7 @@ func main() {
 
 	for i, cert := range certs {
 		if i > 0 {
-			fmt.Println("-------------------")
+			fmt.Println(separator)
 		}
 
 		opts := x509.VerifyOptions{
@@ -93,20 +95,23 @@ func getCerts(u *url.URL) ([]*x509.Certificate, error) {
 
 func printCert(cert *x509.Certificate, verifyOpts x509.VerifyOptions) {
 	valid := "yes"
-	_, err := cert.Verify(verifyOpts)
-	if err != nil {
+	if _, err := cert.Verify(verifyOpts); err != nil {
 		valid = fmt.Sprintf("no (%s)", err)
 	}
 
 	serialNumber := strings.ToUpper(cert.SerialNumber.Text(16))
 
-	fmt.Println("Subject:         ", cert.Subject)
-	fmt.Println("Issuer:          ", cert.Issuer)
+	print("Subject", cert.Subject)
+	print("Issuer", cert.Issuer)
 	if len(cert.DNSNames) > 0 {
-		fmt.Println("DNS names:       ", strings.Join(cert.DNSNames, ", "))
+		print("DNS names", strings.Join(cert.DNSNames, ", "))
 	}
-	fmt.Println("Valid:           ", valid)
-	fmt.Println("Not valid before:", cert.NotBefore)
-	fmt.Println("Not valid after: ", cert.NotAfter)
-	fmt.Println("Serial number:   ", serialNumber)
+	print("Valid", valid)
+	print("Not valid before", cert.NotBefore)
+	print("Not valid after", cert.NotAfter)
+	print("Serial number", serialNumber)
+}
+
+func print(title string, value interface{}) {
+	fmt.Printf("%-20s  %s\n", title, value)
 }

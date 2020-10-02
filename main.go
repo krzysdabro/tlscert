@@ -14,10 +14,16 @@ import (
 	"github.com/krzysdabro/tlscert/internal/cert"
 )
 
+var (
+	fShowChain = flag.Bool("show-chain", false, "show certificate chain")
+)
+
 func main() {
+	flag.Usage = usage
 	flag.Parse()
-	if flag.NArg() == 0 {
-		fmt.Fprintln(os.Stderr, "No URL was given")
+
+	if flag.NArg() != 1 {
+		flag.Usage()
 		os.Exit(1)
 	}
 
@@ -37,7 +43,17 @@ func main() {
 		Intermediates: cert.IntermediatesCertPool(certs[1:]),
 		DNSName:       u.Hostname(),
 	}
-	cert.PrintChain(certs[0], opts)
+	if *fShowChain {
+		cert.PrintChain(certs[0], opts)
+	} else {
+		cert.Print(certs[0], opts)
+	}
+}
+
+func usage() {
+	cl := flag.CommandLine
+	fmt.Fprintf(cl.Output(), "Usage: %s [options] <url>\n", cl.Name())
+	cl.PrintDefaults()
 }
 
 func parseURL(arg string) (*url.URL, error) {

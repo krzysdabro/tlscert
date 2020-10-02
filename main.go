@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/krzysdabro/tlscert/internal/cert"
@@ -40,16 +41,29 @@ func main() {
 }
 
 func parseURL(arg string) (*url.URL, error) {
+	// if URL does not contain scheme append slashes to prevent hostname from becoming the scheme
+	if !strings.Contains(arg, "//") {
+		arg = "//" + arg
+	}
+
 	u, err := url.Parse(arg)
 	if err != nil {
 		return nil, err
 	}
 
-	if u.Scheme == "https" {
+	switch u.Scheme {
+	case "https":
 		u.Scheme = "tcp"
+		u.Host = net.JoinHostPort(u.Hostname(), "443")
+	case "":
+		u.Scheme = "tcp"
+		fallthrough
+	case "tcp", "udp":
 		if u.Port() == "" {
-			u.Host += ":443"
+			return nil, fmt.Errorf("port not specified")
 		}
+	default:
+		return nil, fmt.Errorf("unsupported scheme %q", u.Scheme)
 	}
 
 	return u, nil
@@ -69,11 +83,9 @@ func getCerts(u *url.URL) ([]*x509.Certificate, error) {
 	tlsConn := tls.Client(netConn, cfg)
 	defer tlsConn.Close()
 
-	err = tlsConn.Handshake()
-	if err != nil {
+	if err := tlsConn.Handshake(); err != nil {
 		return nil, err
 	}
 
-	certs := tlsConn.ConnectionState().PeerCertificates
-	return certs, nil
+	return tlsConn.ConnectionState().PeerCertificates, nil
 }

@@ -10,9 +10,9 @@ import (
 	"os"
 	"strings"
 	"time"
-)
 
-var separator = strings.Repeat("-", 30)
+	"github.com/krzysdabro/tlscert/internal/print"
+)
 
 func main() {
 	flag.Parse()
@@ -35,7 +35,7 @@ func main() {
 
 	for i, cert := range certs {
 		if i > 0 {
-			fmt.Println(separator)
+			print.Separator()
 		}
 
 		opts := x509.VerifyOptions{
@@ -94,24 +94,20 @@ func getCerts(u *url.URL) ([]*x509.Certificate, error) {
 }
 
 func printCert(cert *x509.Certificate, verifyOpts x509.VerifyOptions) {
-	valid := "yes"
+	isValid := "yes"
 	if _, err := cert.Verify(verifyOpts); err != nil {
-		valid = fmt.Sprintf("no (%s)", err)
+		isValid = fmt.Sprintf("no (%s)", err)
 	}
 
 	serialNumber := strings.ToUpper(cert.SerialNumber.Text(16))
 
-	print("Subject", cert.Subject)
-	print("Issuer", cert.Issuer)
+	print.PkixName("Subject", cert.Subject)
+	print.PkixName("Issuer", cert.Issuer)
 	if len(cert.DNSNames) > 0 {
-		print("DNS names", strings.Join(cert.DNSNames, ", "))
+		print.List("DNS Name", cert.DNSNames)
 	}
-	print("Valid", valid)
-	print("Not valid before", cert.NotBefore)
-	print("Not valid after", cert.NotAfter)
-	print("Serial number", serialNumber)
-}
-
-func print(title string, value interface{}) {
-	fmt.Printf("%-20s  %s\n", title, value)
+	print.Field("Valid", isValid)
+	print.Field("Not Valid Before", cert.NotBefore.Local().String())
+	print.Field("Not Valid After", cert.NotAfter.Local().String())
+	print.Field("Serial Number", serialNumber)
 }

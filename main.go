@@ -8,10 +8,9 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/krzysdabro/tlscert/internal/print"
+	"github.com/krzysdabro/tlscert/internal/cert"
 )
 
 func main() {
@@ -33,25 +32,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	for i, cert := range certs {
-		if i > 0 {
-			print.Separator()
-		}
-
-		opts := x509.VerifyOptions{
-			Intermediates: x509.NewCertPool(),
-		}
-		if !cert.IsCA {
-			opts.DNSName = u.Hostname()
-			for j, c := range certs {
-				if j > i {
-					opts.Intermediates.AddCert(c)
-				}
-			}
-		}
-
-		printCert(cert, opts)
+	opts := x509.VerifyOptions{
+		Intermediates: cert.IntermediatesCertPool(certs[1:]),
+		DNSName:       u.Hostname(),
 	}
+	cert.PrintChain(certs[0], opts)
 }
 
 func parseURL(arg string) (*url.URL, error) {
@@ -91,23 +76,4 @@ func getCerts(u *url.URL) ([]*x509.Certificate, error) {
 
 	certs := tlsConn.ConnectionState().PeerCertificates
 	return certs, nil
-}
-
-func printCert(cert *x509.Certificate, verifyOpts x509.VerifyOptions) {
-	isValid := "yes"
-	if _, err := cert.Verify(verifyOpts); err != nil {
-		isValid = fmt.Sprintf("no (%s)", err)
-	}
-
-	serialNumber := strings.ToUpper(cert.SerialNumber.Text(16))
-
-	print.PkixName("Subject", cert.Subject)
-	print.PkixName("Issuer", cert.Issuer)
-	if len(cert.DNSNames) > 0 {
-		print.List("DNS Name", cert.DNSNames)
-	}
-	print.Field("Valid", isValid)
-	print.Field("Not Valid Before", cert.NotBefore.Local().String())
-	print.Field("Not Valid After", cert.NotAfter.Local().String())
-	print.Field("Serial Number", serialNumber)
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"flag"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/krzysdabro/tlscert/internal/cert"
 )
@@ -33,7 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	certs, err := getCerts(u)
+	certs, err := cert.Get(u)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to get certificates:", err)
 		os.Exit(1)
@@ -83,25 +81,4 @@ func parseURL(arg string) (*url.URL, error) {
 	}
 
 	return u, nil
-}
-
-func getCerts(u *url.URL) ([]*x509.Certificate, error) {
-	netConn, err := net.DialTimeout(u.Scheme, u.Host, 5*time.Second)
-	if err != nil {
-		return nil, err
-	}
-	defer netConn.Close()
-
-	cfg := &tls.Config{
-		ServerName:         u.Hostname(),
-		InsecureSkipVerify: true,
-	}
-	tlsConn := tls.Client(netConn, cfg)
-	defer tlsConn.Close()
-
-	if err := tlsConn.Handshake(); err != nil {
-		return nil, err
-	}
-
-	return tlsConn.ConnectionState().PeerCertificates, nil
 }

@@ -37,9 +37,18 @@ func PrintChain(cert *x509.Certificate, verifyOpts x509.VerifyOptions) {
 func printSingle(cert *x509.Certificate, validityErr error) {
 	print.PkixName("Subject", cert.Subject)
 	print.PkixName("Issuer", cert.Issuer)
+
 	if len(cert.DNSNames) > 0 {
 		print.List("DNS Name", cert.DNSNames)
 	}
+	if len(cert.IPAddresses) > 0 {
+		ips := make([]string, len(cert.IPAddresses))
+		for i, ip := range cert.IPAddresses {
+			ips[i] = ip.String()
+		}
+		print.List("IP address", ips)
+	}
+
 	print.Field("Valid", isValid(validityErr))
 	print.Field("Not Valid Before", cert.NotBefore.Local().String())
 	print.Field("Not Valid After", cert.NotAfter.Local().String())

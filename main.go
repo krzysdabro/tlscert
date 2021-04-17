@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/x509"
-	"flag"
 	"fmt"
 	"net"
 	"net/url"
@@ -10,22 +9,23 @@ import (
 	"strings"
 
 	"github.com/krzysdabro/tlscert/internal/cert"
+	"github.com/spf13/pflag"
 )
 
 var (
-	fShowChain = flag.Bool("show-chain", false, "show certificate chain")
+	fChain = pflag.Bool("chain", false, "show certificate chain")
 )
 
 func main() {
-	flag.Usage = usage
-	flag.Parse()
+	pflag.Usage = usage
+	pflag.Parse()
 
-	if flag.NArg() != 1 {
-		flag.Usage()
+	if pflag.NArg() != 1 {
+		pflag.Usage()
 		os.Exit(1)
 	}
 
-	u, err := parseURL(flag.Arg(0))
+	u, err := parseURL(pflag.Arg(0))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to parse given URL:", err)
 		os.Exit(1)
@@ -41,7 +41,7 @@ func main() {
 		Intermediates: cert.IntermediatesCertPool(certs[1:]),
 		DNSName:       u.Hostname(),
 	}
-	if *fShowChain {
+	if *fChain {
 		cert.PrintChain(certs[0], opts)
 	} else {
 		cert.Print(certs[0], opts)
@@ -49,9 +49,8 @@ func main() {
 }
 
 func usage() {
-	cl := flag.CommandLine
-	fmt.Fprintf(cl.Output(), "Usage: %s [options] <url>\n", cl.Name())
-	cl.PrintDefaults()
+	fmt.Fprintf(os.Stderr, "Usage: %s [options] <url>\n", os.Args[0])
+	pflag.PrintDefaults()
 }
 
 func parseURL(arg string) (*url.URL, error) {

@@ -3,15 +3,38 @@ package internal
 import (
 	"bytes"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
+
+func GetCertificate(u *url.URL) (*Certificate, error) {
+	switch {
+	case u.Scheme == "file" || (u.Hostname() == "" && u.Path != ""):
+		return getCertFromFile(u.Path)
+	case u.Scheme == "https":
+		u.Host = net.JoinHostPort(u.Hostname(), "443")
+		fallthrough
+	case u.Scheme == "": // default to tcp
+		u.Scheme = "tcp"
+		fallthrough
+	case u.Scheme == "tcp" || u.Scheme == "udp":
+		if u.Hostname() == "" {
+			return nil, fmt.Errorf("hostname is not specified")
+		}
+		if u.Port() == "" {
+			return nil, fmt.Errorf("port is not specified")
+		}
+		return getCertFromTLS(u)
+	default:
+		return nil, fmt.Errorf("unsupported scheme %q", u.Scheme)
+	}
+}
 
 func getCertFromFile(path string) (*Certificate, error) {
 	content, err := os.ReadFile(path)
@@ -19,21 +42,7 @@ func getCertFromFile(path string) (*Certificate, error) {
 		return nil, err
 	}
 
-	certs := []*x509.Certificate{}
-
-	block, rest := pem.Decode(content)
-	for block != nil {
-		if block.Type == "CERTIFICATE" {
-			cert, err := x509.ParseCertificate(block.Bytes)
-			if err != nil {
-				return nil, err
-			}
-			certs = append(certs, cert)
-		}
-		block, rest = pem.Decode(rest)
-	}
-
-	return newCert(certs[0], certs[1:]), nil
+	return parseCert(content, strings.TrimLeft(filepath.Ext(path), "."))
 }
 
 func getCertFromTLS(u *url.URL) (*Certificate, error) {
@@ -65,12 +74,17 @@ func getCertFromHTTP(u *url.URL) (*Certificate, error) {
 		return nil, fmt.Errorf("scheme should be either http or https")
 	}
 
-	resp, _ := http.Get(u.String())
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+
 	if resp.StatusCode == 200 {
 		buf := bytes.NewBuffer([]byte{})
 		buf.ReadFrom(resp.Body)
-		c, _ := x509.ParseCertificate(buf.Bytes())
-		return &Certificate{cert: c}, nil
+
+		return parseCert(buf.Bytes(), strings.TrimLeft(filepath.Ext(u.Path), "."))
 	}
-	return nil, fmt.Errorf("x")
+
+	return nil, fmt.Errorf("cannot get certificate")
 }

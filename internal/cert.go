@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -18,28 +17,6 @@ type Certificate struct {
 	cert     *x509.Certificate
 	chain    []*Certificate
 	hostname string
-}
-
-func GetCertificate(u *url.URL) (*Certificate, error) {
-	switch {
-	case u.Scheme == "file" || (u.Hostname() == "" && u.Path != ""):
-		return getCertFromFile(u.Path)
-	case u.Scheme == "https":
-		u.Host = net.JoinHostPort(u.Hostname(), "443")
-		fallthrough
-	case u.Scheme == "": // default to tcp
-		u.Scheme = "tcp"
-		fallthrough
-	case u.Scheme == "tcp" || u.Scheme == "udp":
-		if u.Hostname() == "" {
-			return nil, fmt.Errorf("hostname is not specified")
-		}
-		if u.Port() == "" {
-			return nil, fmt.Errorf("port is not specified")
-		}
-		return getCertFromTLS(u)
-	}
-	return nil, fmt.Errorf("unsupported scheme %q", u.Scheme)
 }
 
 func newCert(cert *x509.Certificate, chain []*x509.Certificate) *Certificate {

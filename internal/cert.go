@@ -20,20 +20,10 @@ type Certificate struct {
 }
 
 func NewCertificate(cert *x509.Certificate) *Certificate {
-	c := &Certificate{
+	return &Certificate{
 		cert:  cert,
 		chain: map[string]*Certificate{},
 	}
-
-	if len(cert.IssuingCertificateURL) > 0 {
-		if u, err := url.Parse(cert.IssuingCertificateURL[0]); err == nil {
-			if issuingCert, err := getCertFromHTTP(u); err == nil {
-				c.AddCertificateToChain(issuingCert)
-			}
-		}
-	}
-
-	return c
 }
 
 func (c *Certificate) AddCertificateToChain(cert *Certificate) {
@@ -50,6 +40,24 @@ func (c *Certificate) chainCertPool() *x509.CertPool {
 		pool.AddCert(cert.cert)
 	}
 	return pool
+}
+
+func (c *Certificate) DownloadIssuingCertificate() {
+	if len(c.cert.IssuingCertificateURL) == 0 {
+		return
+	}
+
+	for _, rawUrl := range c.cert.IssuingCertificateURL {
+		u, err := url.Parse(rawUrl)
+		if err != nil {
+			continue
+		}
+
+		if issuingCert, err := GetCertificate(u); err == nil {
+			issuingCert.DownloadIssuingCertificate()
+			c.AddCertificateToChain(issuingCert)
+		}
+	}
 }
 
 func (c *Certificate) IsValid() bool {

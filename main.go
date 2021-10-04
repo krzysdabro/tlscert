@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	fChain = pflag.Bool("chain", false, "show certificate chain")
+	fChain              = pflag.Bool("chain", false, "show certificate chain")
+	fDisableAIAFetching = pflag.Bool("disable-aia-fetching", false, "disable fetching certificates provided by Authority Information Access extension")
 )
 
 func main() {
@@ -40,6 +41,10 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to get certificates:", err)
 		os.Exit(1)
+	}
+
+	if !*fDisableAIAFetching {
+		cert.DownloadIssuingCertificate()
 	}
 
 	internal.Print(cert)

@@ -29,6 +29,10 @@ func parseCert(data []byte, format string) (*Certificate, error) {
 			block, rest = pem.Decode(rest)
 		}
 
+		if cert == nil {
+			return nil, fmt.Errorf("cannot decode PEM")
+		}
+
 		return cert, nil
 
 	case "der":
@@ -52,12 +56,12 @@ func parseCert(data []byte, format string) (*Certificate, error) {
 
 		return cert, nil
 
-	case "cer", "crt":
+	case "", "cer", "crt":
 		c, err := parseCert(data, "der")
 		if err != nil {
 			c, err = parseCert(data, "pem")
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("data is neither DER or PEM")
 			}
 		}
 

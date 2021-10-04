@@ -17,9 +17,8 @@ func GetCertificate(u *url.URL) (*Certificate, error) {
 	switch {
 	case u.Scheme == "file" || (u.Hostname() == "" && u.Path != ""):
 		return getCertFromFile(u.Path)
-	case u.Scheme == "https":
-		u.Host = net.JoinHostPort(u.Hostname(), "443")
-		fallthrough
+	case u.Scheme == "http" || u.Scheme == "https":
+		return getCertFromHTTP(u)
 	case u.Scheme == "": // default to tcp
 		u.Scheme = "tcp"
 		fallthrough
@@ -75,10 +74,6 @@ func getCertFromTLS(u *url.URL) (*Certificate, error) {
 }
 
 func getCertFromHTTP(u *url.URL) (*Certificate, error) {
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return nil, fmt.Errorf("scheme should be either http or https")
-	}
-
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return nil, err

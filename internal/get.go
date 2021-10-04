@@ -64,8 +64,13 @@ func getCertFromTLS(u *url.URL) (*Certificate, error) {
 	}
 
 	certs := tlsConn.ConnectionState().PeerCertificates
-	cert := newCert(certs[0], certs[1:])
+	cert := NewCertificate(certs[0])
 	cert.hostname = u.Hostname()
+
+	for _, c := range certs[1:] {
+		cert.AddCertificateToChain(NewCertificate(c))
+	}
+
 	return cert, nil
 }
 

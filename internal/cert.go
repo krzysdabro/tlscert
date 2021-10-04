@@ -15,35 +15,39 @@ import (
 
 type Certificate struct {
 	cert     *x509.Certificate
-	chain    []*Certificate
+	chain    map[string]*Certificate
 	hostname string
 }
 
-func newCert(cert *x509.Certificate, chain []*x509.Certificate) *Certificate {
+func NewCertificate(cert *x509.Certificate) *Certificate {
 	c := &Certificate{
 		cert:  cert,
-		chain: []*Certificate{},
+		chain: map[string]*Certificate{},
 	}
 
-	if len(chain) == 0 && len(cert.IssuingCertificateURL) > 0 {
+	if len(cert.IssuingCertificateURL) > 0 {
 		if u, err := url.Parse(cert.IssuingCertificateURL[0]); err == nil {
 			if issuingCert, err := getCertFromHTTP(u); err == nil {
-				c.chain = append(c.chain, issuingCert)
+				c.AddCertificateToChain(issuingCert)
 			}
 		}
-	}
-
-	for i, chainCert := range chain {
-		c.chain = append(c.chain, newCert(chainCert, chain[i+1:]))
 	}
 
 	return c
 }
 
+func (c *Certificate) AddCertificateToChain(cert *Certificate) {
+	if _, ok := c.chain[cert.Subject().String()]; ok || c.Equal(cert) {
+		return
+	}
+
+	c.chain[cert.Subject().String()] = cert
+}
+
 func (c *Certificate) chainCertPool() *x509.CertPool {
 	pool := x509.NewCertPool()
-	for _, chainCert := range c.chain {
-		pool.AddCert(chainCert.cert)
+	for _, cert := range c.Chain() {
+		pool.AddCert(cert.cert)
 	}
 	return pool
 }
@@ -62,11 +66,11 @@ func (c *Certificate) IsValid() bool {
 }
 
 func (c *Certificate) IsRevoked() bool {
-	if len(c.cert.OCSPServer) == 0 || len(c.chain) == 0 {
+	if _, issuerOk := c.chain[c.Issuer().String()]; len(c.cert.OCSPServer) == 0 || !issuerOk {
 		return false
 	}
 
-	body, err := ocsp.CreateRequest(c.cert, c.chain[0].cert, nil)
+	body, err := ocsp.CreateRequest(c.cert, c.chain[c.Issuer().String()].cert, nil)
 	if err != nil {
 		return false
 	}
@@ -79,12 +83,21 @@ func (c *Certificate) IsRevoked() bool {
 	buf := bytes.NewBuffer([]byte{})
 	buf.ReadFrom(resp.Body)
 
-	r, err := ocsp.ParseResponse(buf.Bytes(), c.chain[0].cert)
+	r, err := ocsp.ParseResponse(buf.Bytes(), c.chain[c.Issuer().String()].cert)
 	return err == nil && r.Status == 1
 }
 
-func (c *Certificate) Chain() []*Certificate {
-	return c.chain
+func (c *Certificate) Chain() map[string]*Certificate {
+	certs := c.chain
+	for _, chainCert := range c.chain {
+		for _, innerChainCert := range chainCert.Chain() {
+			if _, ok := certs[innerChainCert.Subject().String()]; !ok {
+				certs[innerChainCert.Subject().String()] = innerChainCert
+			}
+		}
+	}
+
+	return certs
 }
 
 func (c *Certificate) Subject() pkix.Name {
@@ -126,4 +139,8 @@ func (c *Certificate) SerialNumber() string {
 		result += str[i:i+2] + " "
 	}
 	return result
+}
+
+func (c *Certificate) Equal(other *Certificate) bool {
+	return c.cert.Equal(other.cert)
 }

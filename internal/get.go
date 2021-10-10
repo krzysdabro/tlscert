@@ -76,15 +76,16 @@ func getCertFromTLS(u *url.URL) (*Certificate, error) {
 func getCertFromHTTP(u *url.URL) (*Certificate, error) {
 	resp, err := http.Get(u.String())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get certificate from %q: %v", u.String(), err)
 	}
 
-	if resp.StatusCode == 200 {
-		buf := bytes.NewBuffer([]byte{})
-		buf.ReadFrom(resp.Body)
-
-		return parseCert(buf.Bytes(), strings.TrimLeft(filepath.Ext(u.Path), "."))
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("failed to get certificate from %q: got status code %d", u.String(), resp.StatusCode)
 	}
 
-	return nil, fmt.Errorf("cannot get certificate")
+	buf := bytes.NewBuffer([]byte{})
+	buf.ReadFrom(resp.Body)
+
+	return parseCert(buf.Bytes(), strings.TrimLeft(filepath.Ext(u.Path), "."))
+
 }

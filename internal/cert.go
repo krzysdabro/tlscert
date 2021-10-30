@@ -4,11 +4,12 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"fmt"
+	"math/big"
 	"net"
 	"net/url"
-	"strings"
 	"time"
 
+	ct "github.com/google/certificate-transparency-go"
 	"github.com/krzysdabro/tlscert/internal/certutil"
 )
 
@@ -113,17 +114,12 @@ func (c *Certificate) NotAfter() time.Time {
 	return c.cert.NotAfter
 }
 
-func (c *Certificate) SerialNumber() string {
-	str := strings.ToUpper(c.cert.SerialNumber.Text(16))
-	if len(str)%2 == 1 {
-		str = "0" + str
-	}
+func (c *Certificate) SignedCertificateTimestamps() []ct.SignedCertificateTimestamp {
+	return certutil.GetSCTs(c.cert)
+}
 
-	result := ""
-	for i := 0; i < len(str); i += 2 {
-		result += str[i:i+2] + " "
-	}
-	return result
+func (c *Certificate) SerialNumber() *big.Int {
+	return c.cert.SerialNumber
 }
 
 func (c *Certificate) IsOCSPPresent() bool {

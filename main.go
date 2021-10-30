@@ -13,6 +13,7 @@ import (
 var (
 	fChain              = pflag.Bool("chain", false, "show certificate chain")
 	fDisableAIAFetching = pflag.Bool("disable-aia-fetching", false, "disable fetching certificates provided by Authority Information Access extension")
+	fSCT                = pflag.Bool("sct", false, "print Signed Certificate Timestamps")
 )
 
 func main() {
@@ -47,11 +48,15 @@ func main() {
 		cert.DownloadIssuingCertificate()
 	}
 
-	internal.Print(cert)
+	opts := &internal.PrintOptions{
+		SCTs: *fSCT,
+	}
+
+	internal.Print(cert, opts)
 	if chain := cert.Chain(); *fChain && len(chain) > 0 {
 		for _, chainCert := range chain {
 			fmt.Print("\n\n")
-			internal.Print(chainCert)
+			internal.Print(chainCert, opts)
 		}
 	}
 }

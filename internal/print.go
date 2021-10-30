@@ -20,6 +20,8 @@ func Print(cert *Certificate) {
 
 	table.AddRow("Subject", printPkixName(cert.Subject()))
 	table.AddRow("Issuer", printPkixName(cert.Issuer()))
+	table.AddRow("Not Valid Before", cert.NotBefore().Local().String())
+	table.AddRow("Not Valid After", cert.NotAfter().Local().String())
 
 	if certDNS := cert.DNSNames(); len(certDNS) > 0 {
 		table.AddRow("DNS Names", strings.Join(certDNS, "\n"))
@@ -33,8 +35,6 @@ func Print(cert *Certificate) {
 		table.AddRow("IP Addresses", ips)
 	}
 
-	table.AddRow("Not Valid Before", cert.NotBefore().Local().String())
-	table.AddRow("Not Valid After", cert.NotAfter().Local().String())
 	table.AddRow("Serial Number", cert.SerialNumber())
 
 	fmt.Println(table)
@@ -54,13 +54,24 @@ func printPkixName(name pkix.Name) string {
 	return s
 }
 
+var (
+	redBadge   = color.New(color.BgLightRed, color.FgWhite)
+	greenBadge = color.New(color.BgLightGreen, color.FgBlack)
+)
+
 func certStatus(cert *Certificate) string {
+	revoked := false
+	if cert.IsOCSPPresent() {
+		ok, err := cert.OCSPStatus()
+		revoked = err == nil && !ok
+	}
+
 	switch {
+	case revoked:
+		return redBadge.Sprint("  REVOKED  ")
 	case !cert.IsValid():
-		return color.BgLightRed.Sprint(" NOT VALID ")
-	case cert.IsRevoked():
-		return color.BgLightRed.Sprint("  REVOKED  ")
+		return redBadge.Sprint(" NOT VALID ")
 	default:
-		return color.New(color.BgLightGreen, color.FgBlack).Sprint("   VALID   ")
+		return greenBadge.Sprint("   VALID   ")
 	}
 }

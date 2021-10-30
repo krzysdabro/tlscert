@@ -1,16 +1,15 @@
 package internal
 
 import (
-	"bytes"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"fmt"
 	"net"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/ocsp"
+	"github.com/krzysdabro/tlscert/internal/certutil"
 )
 
 type Certificate struct {
@@ -73,28 +72,6 @@ func (c *Certificate) IsValid() bool {
 	return err == nil
 }
 
-func (c *Certificate) IsRevoked() bool {
-	if _, issuerOk := c.chain[c.Issuer().String()]; len(c.cert.OCSPServer) == 0 || !issuerOk {
-		return false
-	}
-
-	body, err := ocsp.CreateRequest(c.cert, c.chain[c.Issuer().String()].cert, nil)
-	if err != nil {
-		return false
-	}
-
-	resp, err := http.Post(c.cert.OCSPServer[0], "application/ocsp-request", bytes.NewReader(body))
-	if err != nil || resp.StatusCode != 200 {
-		return false
-	}
-
-	buf := bytes.NewBuffer([]byte{})
-	buf.ReadFrom(resp.Body)
-
-	r, err := ocsp.ParseResponse(buf.Bytes(), c.chain[c.Issuer().String()].cert)
-	return err == nil && r.Status == 1
-}
-
 func (c *Certificate) Chain() map[string]*Certificate {
 	certs := c.chain
 	for _, chainCert := range c.chain {
@@ -147,6 +124,27 @@ func (c *Certificate) SerialNumber() string {
 		result += str[i:i+2] + " "
 	}
 	return result
+}
+
+func (c *Certificate) IsOCSPPresent() bool {
+	return len(c.cert.OCSPServer) > 0
+}
+
+func (c *Certificate) OCSPStatus() (bool, error) {
+	if !c.IsOCSPPresent() {
+		return false, fmt.Errorf("no OCSP server present for certificate")
+	}
+
+	issuer, issuerOk := c.chain[c.Issuer().String()]
+	if !issuerOk {
+		return false, fmt.Errorf("issuer not present in chain")
+	}
+
+	if ok, err := certutil.CheckOCSP(c.cert, issuer.cert); err != nil || !ok {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (c *Certificate) Equal(other *Certificate) bool {

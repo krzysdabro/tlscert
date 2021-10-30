@@ -7,16 +7,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gookit/color"
+	"github.com/fatih/color"
 	"github.com/gosuri/uitable"
 	"github.com/krzysdabro/tlscert/internal/certutil"
 )
 
 var (
-	tableSeparator = color.FgDarkGray.Sprint(" | ")
+	tableSeparator = color.New(color.FgHiBlack).Sprint(" | ")
 
-	redBadge   = color.New(color.BgLightRed, color.FgWhite)
-	greenBadge = color.New(color.BgLightGreen, color.FgBlack)
+	redBadge   = color.New(color.BgHiRed, color.FgWhite)
+	greenBadge = color.New(color.BgHiGreen, color.FgBlack)
 )
 
 type PrintOptions struct {

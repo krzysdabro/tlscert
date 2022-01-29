@@ -11,29 +11,7 @@ import (
 func parseCert(data []byte, format string) (*Certificate, error) {
 	switch format {
 	case "pem":
-		var cert *Certificate
-		block, rest := pem.Decode(data)
-		for block != nil {
-			if block.Type == "CERTIFICATE" {
-				c, err := parseCert(block.Bytes, "der")
-				if err != nil {
-					return nil, fmt.Errorf("failed to parse PEM: %v", err)
-				}
-
-				if cert == nil {
-					cert = c
-				} else {
-					cert.AddCertificateToChain(c)
-				}
-			}
-			block, rest = pem.Decode(rest)
-		}
-
-		if cert == nil {
-			return nil, fmt.Errorf("failed to parse PEM: no CERTIFICATE block found")
-		}
-
-		return cert, nil
+		return parsePEM(data)
 
 	case "der":
 		c, err := x509.ParseCertificate(data)
@@ -70,4 +48,30 @@ func parseCert(data []byte, format string) (*Certificate, error) {
 	default:
 		return nil, fmt.Errorf("unknown format %q", format)
 	}
+}
+
+func parsePEM(data []byte) (*Certificate, error) {
+	var cert *Certificate
+	block, rest := pem.Decode(data)
+	for block != nil {
+		if block.Type == "CERTIFICATE" {
+			c, err := parseCert(block.Bytes, "der")
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse PEM: %v", err)
+			}
+
+			if cert == nil {
+				cert = c
+			} else {
+				cert.AddCertificateToChain(c)
+			}
+		}
+		block, rest = pem.Decode(rest)
+	}
+
+	if cert == nil {
+		return nil, fmt.Errorf("failed to parse PEM: no CERTIFICATE block found")
+	}
+
+	return cert, nil
 }

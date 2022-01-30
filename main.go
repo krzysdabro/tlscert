@@ -52,11 +52,11 @@ func main() {
 		SCTs: *fSCT,
 	}
 
-	internal.Print(cert, opts)
+	cert.Print(opts)
 	if chain := cert.Chain(); *fChain && len(chain) > 0 {
 		for _, chainCert := range chain {
 			fmt.Print("\n\n")
-			internal.Print(chainCert, opts)
+			chainCert.Print(opts)
 		}
 	}
 }

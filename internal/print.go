@@ -23,23 +23,23 @@ type PrintOptions struct {
 	SCTs bool
 }
 
-func Print(cert *Certificate, opts *PrintOptions) {
-	fmt.Printf("%s %s\n", certStatus(cert), cert.CommonName())
+func (c *Certificate) Print(opts *PrintOptions) {
+	fmt.Printf("%s %s\n", certStatus(c), c.CommonName())
 
 	table := uitable.New()
 	table.Wrap = true
 	table.Separator = tableSeparator
 
-	table.AddRow("Subject", printPkixName(cert.Subject()))
-	table.AddRow("Issuer", printPkixName(cert.Issuer()))
-	table.AddRow("Not Valid Before", cert.NotBefore().Local().String())
-	table.AddRow("Not Valid After", cert.NotAfter().Local().String())
+	table.AddRow("Subject", printPkixName(c.Subject()))
+	table.AddRow("Issuer", printPkixName(c.Issuer()))
+	table.AddRow("Not Valid Before", c.NotBefore().Local().String())
+	table.AddRow("Not Valid After", c.NotAfter().Local().String())
 
-	if certDNS := cert.DNSNames(); len(certDNS) > 0 {
+	if certDNS := c.DNSNames(); len(certDNS) > 0 {
 		table.AddRow("DNS Names", strings.Join(certDNS, "\n"))
 	}
 
-	if certIPs := cert.IPAddresses(); len(certIPs) > 0 {
+	if certIPs := c.IPAddresses(); len(certIPs) > 0 {
 		ips := make([]string, len(certIPs))
 		for i, ip := range certIPs {
 			ips[i] = ip.String()
@@ -47,9 +47,9 @@ func Print(cert *Certificate, opts *PrintOptions) {
 		table.AddRow("IP Addresses", ips)
 	}
 
-	table.AddRow("Serial Number", formatBigInt(cert.SerialNumber()))
+	table.AddRow("Serial Number", formatBigInt(c.SerialNumber()))
 
-	if sctList := cert.SignedCertificateTimestamps(); opts.SCTs && len(sctList) > 0 {
+	if sctList := c.SignedCertificateTimestamps(); opts.SCTs && len(sctList) > 0 {
 		for i, sct := range sctList {
 			logOperator := "Unknown"
 			if log := certutil.GetSCTLog(sct); log != nil {

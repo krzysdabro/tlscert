@@ -19,10 +19,12 @@ var (
 	greenBadge = color.New(color.BgHiGreen, color.FgBlack)
 )
 
+// PrintOptions defines cetificate printing options.
 type PrintOptions struct {
 	SCTs bool
 }
 
+// Print prints details about certificate.
 func (c *Certificate) Print(opts *PrintOptions) {
 	fmt.Printf("%s %s\n", certStatus(c), c.CommonName())
 

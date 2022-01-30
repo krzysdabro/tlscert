@@ -16,6 +16,7 @@ var oidExtensionCT = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 11129, 2, 4, 2}
 
 var ctLogList *ctlogs.LogList
 
+// GetSCTs returns Signed Certificate Timestamps from certificate.
 func GetSCTs(cert *x509.Certificate) (result []ct.SignedCertificateTimestamp) {
 	var serializedSCTs []byte
 
@@ -44,6 +45,7 @@ func GetSCTs(cert *x509.Certificate) (result []ct.SignedCertificateTimestamp) {
 	return
 }
 
+// GetSCTLog return a SCT log relevent to given SCT.
 func GetSCTLog(sct ct.SignedCertificateTimestamp) *ctlogs.Log {
 	if ctLogList == nil {
 		return nil

@@ -13,13 +13,17 @@ import (
 	"time"
 )
 
+// GetCertificate returns a certificate from a given URL.
+// Certificate can be sourced from a file (e.g. `file:///path/to/the/cert.pem`),
+// a connection (e.g. `tcp://1.2.3.4:443`) or downloaded (e.g. `https://letsencrypt.org/certs/isrgrootx1.pem`).
+// If no scheme is provided, it defaults to TCP.
 func GetCertificate(u *url.URL) (*Certificate, error) {
 	switch {
 	case u.Scheme == "file" || (u.Hostname() == "" && u.Path != ""):
 		return getCertFromFile(u.Path)
 	case u.Scheme == "http" || u.Scheme == "https":
 		return getCertFromHTTP(u)
-	case u.Scheme == "": // default to tcp
+	case u.Scheme == "":
 		u.Scheme = "tcp"
 		fallthrough
 	case u.Scheme == "tcp" || u.Scheme == "udp":

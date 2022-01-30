@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/ocsp"
 )
 
+// CheckOCSP checks with OCSP server whether the certificate is revoked.
 func CheckOCSP(cert *x509.Certificate, issuer *x509.Certificate) (bool, error) {
 	if len(cert.OCSPServer) == 0 {
 		return false, fmt.Errorf("no OCSP server present for certificate")

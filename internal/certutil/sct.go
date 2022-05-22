@@ -45,7 +45,7 @@ func GetSCTs(cert *x509.Certificate) (result []ct.SignedCertificateTimestamp) {
 	return
 }
 
-// GetSCTLog return a SCT log relevent to given SCT.
+// GetSCTLog return a SCT log relevant to given SCT.
 func GetSCTLog(sct ct.SignedCertificateTimestamp) *ctlogs.Log {
 	if ctLogList == nil {
 		return nil

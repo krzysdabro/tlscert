@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	tableSeparator = color.New(color.FgHiBlack).Sprint(" | ")
+	tableSeparator = color.New(color.FgHiBlack).Sprint(" │ ")
 
 	redBadge   = color.New(color.BgHiRed, color.FgWhite)
 	greenBadge = color.New(color.BgHiGreen, color.FgBlack)

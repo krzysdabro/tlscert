@@ -127,12 +127,26 @@ func certStatus(cert *Certificate) string {
 		revoked = err == nil && !ok
 	}
 
+	lBorder, rBorder := " ", " "
+
+	// add border when output is not a terminal
+	if color.NoColor {
+		lBorder, rBorder = "[", "]"
+	}
+
 	switch {
 	case revoked:
-		return redBadge.Sprint("  REVOKED  ")
+		return redBadge.Sprintf("%s REVOKED %s", lBorder, rBorder)
 	case !cert.IsValid():
-		return redBadge.Sprint(" NOT VALID ")
+		return redBadge.Sprintf("%sNOT VALID%s", lBorder, rBorder)
 	default:
-		return greenBadge.Sprint("   VALID   ")
+		return greenBadge.Sprintf("%s  VALID  %s", lBorder, rBorder)
+	}
+}
+
+func init() {
+	// use simple pipe as separator when output is not a terminal
+	if color.NoColor {
+		tableSeparator = " | "
 	}
 }

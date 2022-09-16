@@ -87,7 +87,11 @@ func getCertFromTLS(u *url.URL) (*Certificate, error) {
 }
 
 func getCertFromHTTP(u *url.URL) (*Certificate, error) {
-	resp, err := http.Get(u.String())
+	client := &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
+
+	resp, err := client.Get(u.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get certificate from %q: %v", u.String(), err)
 	}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/krzysdabro/tlscert/internal"
 	"github.com/spf13/pflag"
@@ -26,11 +25,6 @@ func main() {
 	}
 
 	arg := pflag.Arg(0)
-
-	// if URL does not contain scheme append slashes to prevent hostname from becoming the scheme
-	if !strings.Contains(arg, "//") {
-		arg = "//" + arg
-	}
 
 	u, err := url.Parse(arg)
 	if err != nil {

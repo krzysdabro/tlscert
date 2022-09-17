@@ -54,7 +54,7 @@ func getCertFromFile(path string) (*Certificate, error) {
 		return nil, err
 	}
 
-	return parseCert(content, strings.TrimLeft(filepath.Ext(path), "."))
+	return ParseCertificate(content, strings.TrimLeft(filepath.Ext(path), "."))
 }
 
 func getCertFromTLS(u *url.URL) (*Certificate, error) {
@@ -103,6 +103,6 @@ func getCertFromHTTP(u *url.URL) (*Certificate, error) {
 	buf := bytes.NewBuffer([]byte{})
 	buf.ReadFrom(resp.Body)
 
-	return parseCert(buf.Bytes(), strings.TrimLeft(filepath.Ext(u.Path), "."))
+	return ParseCertificate(buf.Bytes(), strings.TrimLeft(filepath.Ext(u.Path), "."))
 
 }

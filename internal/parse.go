@@ -8,7 +8,7 @@ import (
 	"go.mozilla.org/pkcs7"
 )
 
-func parseCert(data []byte, format string) (*Certificate, error) {
+func ParseCertificate(data []byte, format string) (*Certificate, error) {
 	switch format {
 	case "pem":
 		return parsePEM(data)
@@ -35,9 +35,9 @@ func parseCert(data []byte, format string) (*Certificate, error) {
 		return cert, nil
 
 	case "", "cer", "crt":
-		c, err := parseCert(data, "der")
+		c, err := ParseCertificate(data, "der")
 		if err != nil {
-			c, err = parseCert(data, "pem")
+			c, err = ParseCertificate(data, "pem")
 			if err != nil {
 				return nil, fmt.Errorf("data is neither DER or PEM")
 			}
@@ -55,7 +55,7 @@ func parsePEM(data []byte) (*Certificate, error) {
 	block, rest := pem.Decode(data)
 	for block != nil {
 		if block.Type == "CERTIFICATE" {
-			c, err := parseCert(block.Bytes, "der")
+			c, err := ParseCertificate(block.Bytes, "der")
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse PEM: %v", err)
 			}

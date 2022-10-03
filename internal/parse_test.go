@@ -30,6 +30,7 @@ func TestParseCertificate(t *testing.T) {
 	rawDERCert := loadRawCert(t, fs, "cert.cer")
 	rawPEMCert := loadRawCert(t, fs, "cert.pem")
 	rawP7CCert := loadRawCert(t, fs, "cert.p7c")
+	rawPKCS12Cert := loadRawCert(t, fs, "cert.pfx")
 	DERCert := loadCert(t, fs, "cert.cer")
 	PEMCert := loadCert(t, fs, "cert.pem")
 	P7CCert := loadCert(t, fs, "cert.pem")
@@ -44,6 +45,7 @@ func TestParseCertificate(t *testing.T) {
 		{name: "valid .cer certificate", data: rawDERCert, format: "cer", cert: DERCert},
 		{name: "valid .pem certificate", data: rawPEMCert, format: "pem", cert: PEMCert},
 		{name: "valid .p7c certificate", data: rawP7CCert, format: "p7c", cert: P7CCert},
+		{name: "valid .pfx certificate", data: rawPKCS12Cert, format: "pfx", cert: P7CCert},
 		{name: "garbage data in PEM", data: invalidPEM1, format: "pem", err: fmt.Errorf("failed to parse PEM: failed to parse DER: x509: malformed certificate")},
 		{name: "no CERTIFICATE block", data: invalidPEM2, format: "pem", err: fmt.Errorf("failed to parse PEM: no CERTIFICATE block found")},
 		{name: "invalid DER", data: invalidPEM1, format: "der", err: fmt.Errorf("failed to parse DER: x509: malformed certificate")},

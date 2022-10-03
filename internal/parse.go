@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"go.mozilla.org/pkcs7"
+	"golang.org/x/crypto/pkcs12"
 )
 
 func ParseCertificate(data []byte, format string) (*Certificate, error) {
@@ -33,6 +34,14 @@ func ParseCertificate(data []byte, format string) (*Certificate, error) {
 		}
 
 		return cert, nil
+
+	case "pfx":
+		_, crt, err := pkcs12.Decode(data, "")
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse PKCS#12: %v", err)
+		}
+
+		return NewCertificate(crt), nil
 
 	case "", "cer", "crt":
 		c, err := ParseCertificate(data, "der")

@@ -63,10 +63,12 @@ func startHTTPSServer(t *testing.T, opts *serverOptions) {
 	}
 
 	t.Cleanup(func() {
+		t.Logf("Shutting down HTTPS server")
 		srv.Shutdown(context.Background())
 	})
 
 	go func() {
+		t.Logf("Starting HTTPS server")
 		if err := srv.ListenAndServeTLS(opts.certFile, opts.keyFile); err != http.ErrServerClosed {
 			t.Logf("HTTPS Server: %s", err)
 		}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -73,6 +74,8 @@ func startHTTPSServer(t *testing.T, opts *serverOptions) {
 			t.Logf("HTTPS Server: %s", err)
 		}
 	}()
+
+	time.Sleep(500 * time.Millisecond)
 }
 
 var equateErrorMessage = cmp.Comparer(func(x, y error) bool {

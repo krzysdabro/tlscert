@@ -44,7 +44,7 @@ func TestGetCertificate(t *testing.T) {
 		{url: "tcp://127.0.0.1", err: fmt.Errorf("port is not specified")},
 		{url: "foo://127.0.0.1:8443", err: fmt.Errorf(`unsupported scheme "foo"`)},
 		{url: "http://0.0.0.0", err: fmt.Errorf("dial tcp 0.0.0.0:443: connect: connection refused")},
-		{url: "http://foo.bar/cert.pem", err: fmt.Errorf(`failed to get certificate from "http://foo.bar/cert.pem": Get "http://foo.bar/cert.pem": dial tcp: lookup foo.bar: no such host`)},
+		{url: "http://foo.bar/cert.pem", ignoreErrorContent: true},
 	}
 
 	for _, c := range cases {

@@ -104,5 +104,4 @@ func getCertFromHTTP(u *url.URL) (*Certificate, error) {
 	buf.ReadFrom(resp.Body)
 
 	return ParseCertificate(buf.Bytes(), strings.TrimLeft(filepath.Ext(u.Path), "."))
-
 }

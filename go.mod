@@ -9,5 +9,5 @@ require (
 	github.com/gosuri/uitable v0.0.4
 	github.com/spf13/pflag v1.0.5
 	go.mozilla.org/pkcs7 v0.0.0-20210826202110-33d05740a352
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
+	golang.org/x/crypto v0.6.0
 )

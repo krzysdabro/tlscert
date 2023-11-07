@@ -3,7 +3,7 @@ module github.com/krzysdabro/tlscert
 go 1.14
 
 require (
-	github.com/fatih/color v1.15.0
+	github.com/fatih/color v1.16.0
 	github.com/google/certificate-transparency-go v1.1.3
 	github.com/google/go-cmp v0.6.0
 	github.com/gosuri/uitable v0.0.4

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	ct "github.com/google/certificate-transparency-go"
-	ctlogs "github.com/google/certificate-transparency-go/loglist"
+	ctlogs "github.com/google/certificate-transparency-go/loglist3"
 	cttls "github.com/google/certificate-transparency-go/tls"
 	ctx509 "github.com/google/certificate-transparency-go/x509"
 	ctx509util "github.com/google/certificate-transparency-go/x509util"

@@ -61,7 +61,7 @@ func TestGetCertificate(t *testing.T) {
 
 			var retErr error
 			if err != nil {
-				retErr = fmt.Errorf(err.Error())
+				retErr = fmt.Errorf("%s", err.Error())
 			}
 
 			if diff := cmp.Diff(c.err, retErr, equateErrorMessage); !c.ignoreErrorContent && diff != "" {
